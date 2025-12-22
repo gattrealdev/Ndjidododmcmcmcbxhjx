@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jasher — Null X Milo</title>
+<style>
+  :root{
+    --bg1:#00121a;
+    --bg2:#001933;
+    --neon-cyan: #00f0ff;
+    --neon-pink: #ff4ecf;
+    --glass: rgba(255,255,255,0.04);
+    --card-border: rgba(0,240,255,0.18);
+    --accent: #00f0ff;
+    --accent-2: #ff4ecf;
+    --txt: #e8ffff;
+    --muted:#9fe7ff;
+    --success:#8ef78e;
+  }
+
+  /* page layout */
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Arial, Helvetica, "Segoe UI", Roboto, "Helvetica Neue";margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    min-height:100vh;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(0,240,255,0.06), transparent),
+                radial-gradient(900px 500px at 90% 80%, rgba(255,78,207,0.03), transparent),
+                linear-gradient(180deg,var(--bg1), var(--bg2));
+    color:var(--txt);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    overflow:hidden;
+  }
+
+  /* animated gradient overlay */
+  .anim-overlay{
+    position:fixed;left:0;right:0;top:0;bottom:0;mix-blend-mode:screen;pointer-events:none;
+    background: linear-gradient(90deg, rgba(0,240,255,0.06), rgba(255,78,207,0.05), rgba(0,240,255,0.06));
+    background-size:300% 300%;
+    animation: gradientShift 10s linear infinite;
+    filter:blur(40px) saturate(1.2);
+    z-index:0;
+  }
+  @keyframes gradientShift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+
+  /* floating bubbles */
+  .bubbles{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .bubble{
+    position:absolute;border-radius:50%;opacity:0.08;filter:blur(6px);
+    animation: floatUp linear infinite;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), rgba(0,0,0,0));
+  }
+  .bubble.b1{width:220px;height:220px;left:8%;bottom:-40px;background:linear-gradient(135deg, rgba(0,240,255,0.06), rgba(255,78,207,0.02)); animation-duration:18s;}
+  .bubble.b2{width:160px;height:160px;right:6%;bottom:-20px;background:linear-gradient(135deg, rgba(255,78,207,0.04), rgba(0,240,255,0.02)); animation-duration:22s;animation-delay:2s;}
+  .bubble.b3{width:280px;height:280px;left:50%;bottom:-120px;transform:translateX(-50%);background:linear-gradient(135deg, rgba(0,240,255,0.025), rgba(255,78,207,0.02)); animation-duration:28s; animation-delay: -4s;}
+  @keyframes floatUp{0%{transform:translateY(40vh) scale(1)} 100%{transform:translateY(-40vh) scale(1.05)}}
+
+  /* card */
+  .wrap{position:relative;z-index:2;display:flex;gap:28px;align-items:flex-start;flex-direction:column;max-width:420px;width:100%}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0,240,255,0.02) inset;
+    border-radius:16px;
+    padding:22px;
+    backdrop-filter: blur(8px) saturate(1.2);
+    position:relative;
+    overflow:visible;
+  }
+
+  /* neon border accent */
+  .card::after{
+    content:"";
+    position:absolute;inset:-2px;border-radius:18px;
+    background: linear-gradient(90deg, rgba(0,240,255,0.12), rgba(255,78,207,0.06));
+    z-index:-1;filter:blur(18px);opacity:0.9;
+  }
+
+  .header{
+    display:flex;align-items:center;gap:12px;margin-bottom:10px;
+  }
+
+  .logo{
+    width:74px;height:74px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    overflow:hidden;position:relative;
+    transition:transform .45s cubic-bezier(.2,.9,.3,1);
+  }
+  .logo img{width:70%;height:70%}
+  .logo:hover{transform:rotate(-8deg) scale(1.03)}
+
+  .title{
+    line-height:1;
+  }
+  .title h1{
+    font-size:18px;margin:0;font-weight:700;
+    letter-spacing:0.6px;
+    text-shadow:0 0 18px rgba(0,240,255,0.12), 0 0 6px rgba(255,78,207,0.06);
+  }
+  .subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+
+  /* typing effect for big display inside dashboard */
+  .typed{
+    display:inline-block;
+    color:transparent;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    -webkit-background-clip:text;background-clip:text;
+    font-weight:700;
+  }
+
+  /* form controls */
+  input, textarea{
+    width:100%;
+    padding:12px 14px;
+    margin-top:10px;
+    background: rgba(255,255,255,0.02);
+    border-radius:10px;border:1px solid rgba(255,255,255,0.03);
+    color:var(--txt);outline:none;font-size:14px;
+    transition:all .18s ease;
+  }
+  input::placeholder, textarea::placeholder{color:rgba(255,255,255,0.35)}
+  input:focus, textarea:focus{
+    transform:translateY(-1px);
+    box-shadow:0 6px 20px rgba(0,240,255,0.06);
+    border:1px solid var(--card-border);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .muted-line{font-size:12px;color:var(--muted);margin-top:8px}
+
+  /* buttons */
+  .btn{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;
+    padding:10px 14px;border-radius:10px;border:none;cursor:pointer;margin-top:12px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#001722;font-weight:700;letter-spacing:0.4px;
+    box-shadow: 0 6px 24px rgba(0,240,255,0.14);
+    transition:transform .18s ease, box-shadow .18s ease, opacity .12s;
+    overflow:hidden;
+  }
+  .btn:active{transform:translateY(1px) scale(.998)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.ghost{
+    background:transparent;color:var(--neon-cyan);border:1px solid rgba(0,240,255,0.12);
+    box-shadow:none;
+  }
+
+  /* small user/ status box */
+  .userbox{font-size:13px;margin-top:6px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .status-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(180deg,var(--success), #2ec34b);box-shadow:0 0 6px rgba(46,195,75,0.18)}
+
+  /* container toggles between login & dashboard */
+  #dashboard{display:none}
+
+  /* error / toast */
+  .error{color:#ff9aa2;font-size:13px;margin-top:8px}
+  .toast{
+    position:fixed;right:24px;bottom:24px;background:rgba(3,12,20,0.9);padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:100;
+    color:var(--txt);font-size:13px;
+  }
+
+  /* loader */
+  .loader{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.06);border-top-color:var(--neon-cyan);animation:spin .9s linear infinite;margin-left:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* tiny responsive tweaks */
+  @media (max-width:480px){
+    .wrap{max-width:94vw}
+    .logo{width:60px;height:60px}
+  }
+  /* === HAMBURGER === */
+.hamburger{
+  position:fixed;
+  top:20px;
+  left:20px;
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:rgba(0,240,255,.15);
+  border:1px solid rgba(0,240,255,.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:999;
+  box-shadow:0 0 18px rgba(0,240,255,.35);
+}
+
+.hamburger span,
+.hamburger span::before,
+.hamburger span::after{
+  content:"";
+  width:20px;
+  height:2px;
+  background:#00f0ff;
+  position:absolute;
+  transition:.4s;
+}
+.hamburger span::before{transform:translateY(-6px)}
+.hamburger span::after{transform:translateY(6px)}
+
+.hamburger.active span{background:transparent}
+.hamburger.active span::before{transform:rotate(45deg)}
+.hamburger.active span::after{transform:rotate(-45deg)}
+
+/* === SIDEBAR === */
+.sidebar{
+  position:fixed;
+  top:0;
+  left:-260px;
+  width:240px;
+  height:100%;
+  background:rgba(0,10,30,.95);
+  backdrop-filter:blur(12px);
+  border-right:2px solid #00f0ff;
+  box-shadow:0 0 30px rgba(0,240,255,.35);
+  padding:80px 20px;
+  transition:.4s;
+  z-index:998;
+}
+
+.sidebar.active{left:0}
+
+.sidebar h3{
+  margin-bottom:20px;
+  color:#00f0ff;
+  text-shadow:0 0 12px #00f0ff;
+}
+
+.sidebar a{
+  display:block;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  color:#eaffff;
+  background:rgba(255,255,255,.04);
+  text-decoration:none;
+  transition:.25s;
+}
+.sidebar a:hover{
+  background:rgba(0,240,255,.2);
+  box-shadow:0 0 12px rgba(0,240,255,.35);
+}
+.profile-box{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:rgba(0,255,255,.07);
+  padding:12px;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,255,.15);
+}
+
+.avatar{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#00ffff,#0066ff);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  box-shadow:0 0 15px #00ffff;
+}
+
+.profile-info{
+  font-size:13px;
+  line-height:1.6;
+  color:#ccffff;
+}
+
+.token-box{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+}
+
+.token-box span{
+  background:#001a2f;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:13px;
+  color:#00ffff;
+  box-shadow:0 0 10px rgba(0,255,255,.3);
+}
+
+.copyBtn{
+  background:#00ffff;
+  border:none;
+  border-radius:8px;
+  padding:8px 10px;
+  cursor:pointer;
+  box-shadow:0 0 10px #00ffff;
+}
+
+.neon{
+  background:linear-gradient(135deg,#00ffff,#00aaff);
+  color:#001933;
+}
+</style>
+</head>
+<body>
+<!-- HAMBURGER -->
+<div class="hamburger" onclick="toggleMenu()">
+  <span></span>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h3>☰ Jasher Menu</h3>
+  <a href="#" onclick="openDashboard()">🧭 Dashboard</a>
+  <a href="#" onclick="showProfile()">👤 Profile</a>
+  <a href="#" onclick="logout()">🚪 Logout</a>
+</div>
+<div class="anim-overlay"></div>
+<div class="bubbles" aria-hidden="true">
+  <div class="bubble b1"></div>
+  <div class="bubble b2"></div>
+  <div class="bubble b3"></div>
+</div>
+
+<div class="wrap">
+  <!-- LOGIN CARD -->
+  <div class="card" id="loginBox" aria-live="polite">
+    <div class="header">
+      <div class="logo" title="Jasher by Null X Milo">
+        <!-- you can replace with your logo url -->
+        <img src="https://i.imgur.com/qIufhof.png" alt="logo">
+      </div>
+      <div class="title">
+        <h1>Jasher <span class="typed">By Null X Milo</span></h1>
+        <div class="subtitle">Panel sederhana — cepat & neon</div>
+      </div>
+    </div>
+
+    <input id="user" placeholder="Username" autocomplete="username">
+    <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
+    <div style="display:flex;gap:10px">
+      <button class="btn" onclick="login()" id="btnLogin">LOGIN</button>
+      <button class="btn ghost" onclick="openBuy()" title="Beli akses">BUY</button>
+    </div>
+
+    <div id="error" class="error">Belum punya akses? <a href="https://t.me/Milodev_gatt" target="_blank" style="color:var(--accent)">Hubungi Milo</a></div>
+  </div>
+<!-- PROFILE PAGE -->
+<div class="card" id="profilePage" style="display:none">
+
+  <h1 style="margin-bottom:5px">👤 Profile</h1>
+  <p style="font-size:13px;color:#88ffff">Jasher By Null X Milo</p>
+
+  <div class="profile-box">
+    <div class="avatar">👑</div>
+    <div class="profile-info" id="profileInfo">
+      Loading...
+    </div>
+  </div>
+
+  <!-- ADMIN TOKEN -->
+  <div id="adminTokenBox" style="display:none;margin-top:15px">
+    <hr style="border-color:rgba(0,240,255,.25)">
+    <button class="btn neon" onclick="generateToken()">⚡ Generate Token</button>
+
+    <div class="token-box">
+      <span id="generatedToken">—</span>
+      <button class="copyBtn" onclick="copyToken()">📋</button>
+    </div>
+  </div>
+
+  <button class="btn" style="margin-top:15px" onclick="showDashboard()">⬅ Back</button>
+</div>
+
+  <!-- DASHBOARD CARD -->
+  <div class="card" id="dashboard" aria-live="polite">
+    <div class="header">
+      <div class="logo" id="dashLogo">
+        <img src="https://i.imgur.com/qIufhof.png" alt="logo">
+      </div>
+      <div class="title">
+        <h1>Dashboard <span style="font-size:12px;color:var(--muted);font-weight:600">Jasher — Null X Milo</span></h1>
+        <div class="subtitle">Broadcast tool ringan & cepat</div>
+      </div>
+    </div>
+
+    <div class="userbox" id="userInfo">👤 <b>Guest</b> <span style="display:flex;gap:8px;align-items:center"><span class="status-dot"></span> Active</span></div>
+
+    <textarea id="message" rows="4" placeholder="Tulis pesan broadcast..."></textarea>
+    <input type="url" id="gambarops" placeholder="Url Gambar (Opsional)">
+    <input type="text" id="tokenacc" placeholder="milo-xxxx">
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="share()" id="btnShare">SHARE</button>
+      <button class="btn ghost" onclick="logout()">LOGOUT</button>
+    </div>
+
+    <div class="muted-line" id="shareInfo">Tidak ada aktivitas.</div>
+  </div>
+</div>
+
+<!-- simple toast area -->
+<div id="toastArea" aria-live="polite"></div>
+
+<script>
+  const USERS_URL = "https://raw.githubusercontent.com/gattrealdev/Jdjene/refs/heads/main/Users.json";
+  async function loadProfile(){
+  const username = localStorage.getItem("user")
+  if(!username) return
+
+  try{
+    const res = await fetch(USERS_URL)
+    const data = await res.json()
+
+    const user = data.users.find(u => u.username === username)
+    if(!user) return
+
+    document.getElementById("profileInfo").innerHTML = `
+      <b>Username:</b> ${user.username}<br>
+      <b>Role:</b> ${user.role || "Member"}<br>
+      <b>Status:</b> <span style="color:#00ff99">ACTIVE</span>
+    `
+
+    if(user.role === "Admin" || user.role === "Owner"){
+      document.getElementById("adminTokenBox").style.display = "block"
+    }
+
+  }catch(e){
+    document.getElementById("profileInfo").innerText = "❌ Gagal load profile"
+  }
+}
+function showProfile(){
+  document.getElementById("dashboard").style.display="none"
+  document.getElementById("profilePage").style.display="block"
+  loadProfile()
+}
+async function generateToken(){
+  const out = document.getElementById("generatedToken")
+  out.innerText = "⏳ Generating..."
+
+  try{
+    const res = await fetch(
+      "https://prixxsange.sagitarius.web.id/gentoken?admintoken=milo-admin-root"
+    )
+    const text = await res.text()
+
+    if(text.startsWith("milo-")){
+      out.innerText = text
+    }else{
+      out.innerText = "❌ Error"
+    }
+  }catch(e){
+    out.innerText = "❌ Server error"
+  }
+}
+function copyToken(){
+  const t = document.getElementById("generatedToken").innerText
+  if(!t || t === "—") return alert("❌ Token kosong")
+
+  navigator.clipboard.writeText(t)
+  alert("✅ Token disalin")
+}
+function toggleMenu(){
+  document.querySelector('.hamburger').classList.toggle('active')
+  document.getElementById('sidebar').classList.toggle('active')
+}
+
+/* menu actions */
+function openDashboard(){
+  document.getElementById("dashboard").scrollIntoView({behavior:"smooth"})
+  toggleMenu()
+}
+
+
+/* === CONFIG === */
+
+
+/* === UI helpers === */
+function showToast(text, timeout=3800){
+  const id = 't'+Date.now();
+  const d = document.createElement('div');
+  d.className = 'toast';
+  d.id = id;
+  d.innerText = text;
+  document.getElementById('toastArea').appendChild(d);
+  setTimeout(()=>{ d.style.opacity = '0'; d.addEventListener('transitionend', ()=>d.remove()); }, timeout);
+}
+
+/* small helper to open buy link */
+function openBuy(){ window.open('https://t.me/Milodev_gatt','_blank'); }
+
+/* === LOGIN === */
+async function login(){
+  const u=document.getElementById("user").value.trim();
+  const p=document.getElementById("pass").value.trim();
+  const btn = document.getElementById('btnLogin');
+  const err = document.getElementById('error');
+
+  err.innerText = ""; // clear
+
+  if(!u||!p){
+    err.innerText = "❌ Username & password wajib diisi";
+    return;
+  }
+
+  try{
+    btn.disabled = true;
+    btn.innerText = 'Checking...';
+    const res = await fetch(USERS_URL);
+    const data = await res.json();
+    const valid = data.users && data.users.find(x=>x.username===u && x.password===p);
+    if(valid){
+      localStorage.setItem("login","true");
+      localStorage.setItem("user",u);
+      showDashboard();
+      showToast('✅ Login berhasil — welcome ' + u, 3000);
+    } else {
+      err.innerText = "❌ Login gagal. Hubungi admin untuk akses.";
+    }
+  }catch(e){
+    console.error(e);
+    err.innerText = "❌ Gagal ambil data user";
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'LOGIN';
+  }
+}
+
+/* === DASHBOARD === */
+function showDashboard(){
+  if(localStorage.getItem("login")!=="true") return;
+  const user = localStorage.getItem("user") || 'Unknown';
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+  document.getElementById("userInfo").innerHTML = `👤 <b>${user}</b> <span style="display:flex;gap:8px;align-items:center"><span class="status-dot"></span> Active</span>`;
+  // small animated header text
+  animateTyped();
+}
+
+/* === LOGOUT === */
+function logout(){
+  localStorage.clear();
+  location.reload();
+}
+
+/* === SHARE === */
+async function share(){
+  const msg = document.getElementById("message").value.trim();
+  const tokennya = document.getElementById("tokenacc").value.trim();
+  const gambars = document.getElementById("gambarops").value.trim();
+  const shareInfo = document.getElementById("shareInfo");
+  const btn = document.getElementById("btnShare");
+
+  if(!msg || !tokennya){
+    showToast("❌ Pesan & token wajib diisi");
+    return;
+  }
+
+  // build URL (ke backend yang sudah ada)
+  let url = "http://prixxsange.sagitarius.web.id:4089/jasher"
+    + "?text=" + encodeURIComponent(msg)
+    + "&token=" + encodeURIComponent(tokennya);
+
+  if(gambars){
+    url += "&gambar=" + encodeURIComponent(gambars);
+  }
+
+  try{
+    btn.disabled = true;
+    btn.innerHTML = 'Sending <span class="loader"></span>';
+    shareInfo.innerText = "Menghubungi backend...";
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data && data.status){
+      showToast("✅ Broadcast dimulai — Grup: "+ (data.total_group ?? 'N/A') + " | Delay: " + (data.delay ?? 'N/A'));
+      shareInfo.innerText = "Berhasil: " + (data.msg ?? 'Broadcast started');
+      document.getElementById("message").value = "";
+    } else {
+      const msgErr = data && data.msg ? data.msg : 'Gagal: response backend';
+      showToast("❌ " + msgErr);
+      shareInfo.innerText = msgErr;
+    }
+  } catch(e){
+    console.error(e);
+    showToast("❌ Backend tidak terhubung");
+    shareInfo.innerText = "Backend tidak terhubung";
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'SHARE';
+  }
+}
+
+/* === small UI niceties === */
+function animateTyped(){
+  const el = document.querySelector('.typed');
+  if(!el) return;
+  const text = "By Null X Milo";
+  let i=0;
+  el.style.background = "linear-gradient(90deg,var(--neon-cyan),var(--neon-pink))";
+  el.style.webkitBackgroundClip = "text";
+  el.style.backgroundClip = "text";
+  el.innerText = "";
+  const t = setInterval(()=>{
+    el.innerText = text.slice(0, ++i);
+    if(i>=text.length) clearInterval(t);
+  }, 70);
+}
+
+/* auto-login on load if stored */
+(function init(){
+  if(localStorage.getItem("login")==="true"){
+    showDashboard();
+  }
+})();
+
+</script>
+</body>
+</html>
