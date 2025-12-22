@@ -565,7 +565,9 @@ async function share(){
     return;
   }
 
-  // build URL (ke backend yang sudah ada)
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000); // 15 detik
+
   let url = "http://prixxsange.sagitarius.web.id:4089/jasher"
     + "?text=" + encodeURIComponent(msg)
     + "&token=" + encodeURIComponent(tokennya);
@@ -577,28 +579,35 @@ async function share(){
   try{
     btn.disabled = true;
     btn.innerHTML = 'Sending <span class="loader"></span>';
-    shareInfo.innerText = "Menghubungi backend...";
+    shareInfo.innerText = "⏳ Mengirim request ke server...";
 
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     const data = await res.json();
 
-    if(data && data.status){
-      showToast("✅ Broadcast dimulai — Grup: "+ (data.total_group ?? 'N/A') + " | Delay: " + (data.delay ?? 'N/A'));
-      shareInfo.innerText = "Berhasil: " + (data.msg ?? 'Broadcast started');
+    if(data?.status){
+      showToast("✅ Broadcast dimulai ("+(data.total_group||'?')+" grup)");
+      shareInfo.innerText = "✅ Request diterima server (background)";
       document.getElementById("message").value = "";
     } else {
-      const msgErr = data && data.msg ? data.msg : 'Gagal: response backend';
-      showToast("❌ " + msgErr);
-      shareInfo.innerText = msgErr;
+      showToast("❌ " + (data?.msg || "Gagal"));
+      shareInfo.innerText = "❌ " + (data?.msg || "Gagal");
     }
+
   } catch(e){
-    console.error(e);
-    showToast("❌ Backend tidak terhubung");
-    shareInfo.innerText = "Backend tidak terhubung";
+    if(e.name === "AbortError"){
+      showToast("⚠️ Server lama merespon (timeout)");
+      shareInfo.innerText = "⚠️ Timeout";
+    } else {
+      console.error(e);
+      showToast("❌ Server error / mati");
+      shareInfo.innerText = "❌ Server error";
+    }
   } finally {
+    clearTimeout(timeout);
     btn.disabled = false;
     btn.innerHTML = 'SHARE';
   }
+
 }
 
 /* === small UI niceties === */
